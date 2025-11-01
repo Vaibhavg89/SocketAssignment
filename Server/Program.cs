@@ -44,13 +44,15 @@ namespace Server
                 using var stream = client.GetStream();
                 byte[] buffer = new byte[1024];
                 int bytesRead = await stream.ReadAsync(buffer);
-                string receivedText = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                Console.WriteLine($"Received: {receivedText}");
+                string encryptedMsg = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                string received = EncryptionHelper.Decrypt(encryptedMsg);
+                Console.WriteLine($"Received: {received}");
 
-                string response = ProcessMessage(receivedText);
+                string response = ProcessMessage(received);
                 if (response == "EMPTY")
                 {
-                    byte[] emptyBytes = Encoding.UTF8.GetBytes("EMPTY");
+                    string encrypted = EncryptionHelper.Encrypt("EMPTY");
+                    byte[] emptyBytes = Encoding.UTF8.GetBytes(encrypted);
                     await stream.WriteAsync(emptyBytes);
                 }
                 else
@@ -59,7 +61,9 @@ namespace Server
                     for (int i = 0; i < n; i++)
                     {
                         string time = DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss");
-                        byte[] msgBytes = Encoding.UTF8.GetBytes(time);
+                        string encrypted = EncryptionHelper.Encrypt(time);
+
+                        byte[] msgBytes = Encoding.UTF8.GetBytes(encrypted);
                         await stream.WriteAsync(msgBytes);
                         Console.WriteLine($"Sent: {time}");
                         await Task.Delay(1000);

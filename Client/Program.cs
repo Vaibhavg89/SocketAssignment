@@ -20,13 +20,14 @@ namespace Client
 
             Console.Write("Enter message (e.g. SetA-Two): ");
             string msg = Console.ReadLine()!;
+            string encrypted = EncryptionHelper.Encrypt(msg);
 
             try
             {
                 using var client = new TcpClient(ip, port);
                 var stream = client.GetStream();
 
-                byte[] msgBytes = Encoding.UTF8.GetBytes(msg);
+                byte[] msgBytes = Encoding.UTF8.GetBytes(encrypted);
                 await stream.WriteAsync(msgBytes);
 
                 byte[] buffer = new byte[1024];
@@ -35,8 +36,9 @@ namespace Client
                     int bytesRead = await stream.ReadAsync(buffer);
                     if (bytesRead == 0) break;
 
-                    string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine($"Received: {response}");
+                    string encryptedresponse = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    string decryptedMsg = EncryptionHelper.Decrypt(encryptedresponse);
+                    Console.WriteLine($"Received: {decryptedMsg}");
                 }
             }
             catch (Exception ex)
